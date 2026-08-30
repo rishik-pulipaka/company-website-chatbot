@@ -89,8 +89,19 @@
       }
 
       function applyBranding(cfg) {
-        host.style.setProperty('--hvac-primary', cfg.branding.primaryColor);
-        host.style.setProperty('--hvac-accent', cfg.branding.accentColor);
+        // Defensively fall back to default colors if branding is missing or partial
+        const DEFAULT_PRIMARY = '#0b1f3a';
+        const DEFAULT_ACCENT = '#d9603b';
+
+        const primaryColor = (cfg.branding && typeof cfg.branding.primaryColor === 'string')
+          ? cfg.branding.primaryColor
+          : DEFAULT_PRIMARY;
+        const accentColor = (cfg.branding && typeof cfg.branding.accentColor === 'string')
+          ? cfg.branding.accentColor
+          : DEFAULT_ACCENT;
+
+        host.style.setProperty('--hvac-primary', primaryColor);
+        host.style.setProperty('--hvac-accent', accentColor);
         panel.querySelector('.hvac-title').textContent = cfg.businessName;
       }
 
