@@ -72,4 +72,9 @@ if (require.main === module) {
   app.listen(port, () => {
     console.log(`hvac-chatbot listening on port ${port}`);
   });
+
+  const { scheduleMonthlyRecap } = require('./jobs/monthly-recap.js');
+  if (resendClient) {
+    scheduleMonthlyRecap({ db, config, resendClient, fromEmail: process.env.NOTIFY_FROM_EMAIL });
+  }
 }
