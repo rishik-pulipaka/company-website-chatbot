@@ -6,7 +6,7 @@ const SCHEMA = `
 CREATE TABLE IF NOT EXISTS conversations (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   session_id TEXT NOT NULL UNIQUE,
-  started_at TEXT NOT NULL DEFAULT (datetime('now')),
+  started_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
   ended_at TEXT
 );
 
@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS messages (
   role TEXT NOT NULL,
   text TEXT NOT NULL,
   answered_from_config INTEGER,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
 );
 
 CREATE TABLE IF NOT EXISTS leads (
@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS leads (
   name TEXT NOT NULL,
   phone TEXT NOT NULL,
   reason TEXT,
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
   email_sent INTEGER NOT NULL DEFAULT 0,
   sms_sent INTEGER NOT NULL DEFAULT 0
 );
@@ -34,12 +34,12 @@ CREATE TABLE IF NOT EXISTS missed_questions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   conversation_id INTEGER REFERENCES conversations(id),
   question_text TEXT NOT NULL,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
 );
 
 CREATE TABLE IF NOT EXISTS recap_log (
   year_month TEXT PRIMARY KEY,
-  sent_at TEXT NOT NULL DEFAULT (datetime('now'))
+  sent_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
 );
 `;
 

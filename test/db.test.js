@@ -63,3 +63,25 @@ test('creates parent directory for the db file if missing', () => {
   assert.doesNotThrow(() => createDb(dbPath));
   assert.ok(fs.existsSync(dbPath));
 });
+
+test('getRecapStats counts conversations on same-day ISO boundaries (strftime format regression)', () => {
+  const db = createDb(tmpDbPath());
+
+  // Create two conversations that will use the real strftime default
+  const conv1 = db.insertConversation('s1');
+  const conv2 = db.insertConversation('s2');
+
+  // Get today's boundaries in ISO format
+  const today = new Date();
+  const startOfToday = new Date(today);
+  startOfToday.setUTCHours(0, 0, 0, 0);
+  const sinceIso = startOfToday.toISOString();
+
+  const startOfTomorrow = new Date(startOfToday);
+  startOfTomorrow.setUTCDate(startOfToday.getUTCDate() + 1);
+  const untilIso = startOfTomorrow.toISOString();
+
+  // Both conversations were just inserted, so they should be within today's range
+  const stats = db.getRecapStats({ sinceIso, untilIso });
+  assert.equal(stats.conversationCount, 2, 'Both conversations on boundary day should be counted');
+});
