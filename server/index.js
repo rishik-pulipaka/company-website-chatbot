@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('node:path');
 const { createConfigRouter } = require('./routes/config.js');
 const { createChatRouter } = require('./routes/chat.js');
 const { createLeadRouter } = require('./routes/lead.js');
@@ -15,6 +16,7 @@ function createApp({
 } = {}) {
   const app = express();
   app.use(express.json());
+  app.use(express.static(path.join(__dirname, '..', 'widget')));
 
   app.get('/api/health', (req, res) => {
     res.json({ ok: true });
@@ -41,7 +43,6 @@ module.exports = { createApp };
 
 if (require.main === module) {
   require('dotenv').config();
-  const path = require('node:path');
   const { Anthropic } = require('@anthropic-ai/sdk');
   const { Resend } = require('resend');
   const twilio = require('twilio');

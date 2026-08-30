@@ -1,0 +1,136 @@
+:host {
+  --hvac-primary: #0b1f3a;
+  --hvac-accent: #d9603b;
+}
+
+.hvac-bubble {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--hvac-primary);
+  color: white;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  z-index: 2147483000;
+}
+
+.hvac-panel {
+  position: fixed;
+  bottom: 92px;
+  right: 24px;
+  width: 340px;
+  max-width: calc(100vw - 32px);
+  height: 480px;
+  max-height: calc(100vh - 140px);
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: Georgia, 'Times New Roman', serif;
+  z-index: 2147483000;
+}
+
+.hvac-hidden {
+  display: none !important;
+}
+
+.hvac-header {
+  background: var(--hvac-primary);
+  color: white;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+}
+
+.hvac-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.hvac-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 14px;
+}
+
+.hvac-message {
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  max-width: 85%;
+}
+
+.hvac-message-assistant {
+  background: #f0f0f0;
+  color: #111;
+}
+
+.hvac-message-user {
+  background: var(--hvac-accent);
+  color: white;
+  margin-left: auto;
+}
+
+.hvac-quick-replies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 12px;
+}
+
+.hvac-quick-replies button {
+  border: 1px solid var(--hvac-accent);
+  color: var(--hvac-accent);
+  background: white;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.hvac-input-row,
+.hvac-lead-form {
+  display: flex;
+  gap: 6px;
+  padding: 8px 12px;
+  border-top: 1px solid #eee;
+}
+
+.hvac-lead-form {
+  flex-direction: column;
+}
+
+.hvac-input-row input,
+.hvac-lead-form input,
+.hvac-lead-form textarea {
+  font-family: inherit;
+  font-size: 14px;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  flex: 1;
+}
+
+.hvac-input-row button,
+.hvac-lead-form button {
+  background: var(--hvac-accent);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
