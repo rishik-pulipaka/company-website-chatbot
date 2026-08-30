@@ -92,3 +92,55 @@ test('POST /api/chat with missing message returns 400', async () => {
     server.close();
   }
 });
+
+test('POST /api/chat handles database errors gracefully', async () => {
+  const db = freshDb();
+  // Mock db.insertConversation to throw an error
+  db.insertConversation = () => {
+    throw new Error('Database disk full');
+  };
+  const app = createApp({ config, db, anthropicClient: fakeClient(true, 'x'), model: 'fake' });
+  const server = app.listen(0);
+  const { port } = server.address();
+  try {
+    const res = await fetch(`http://localhost:${port}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId: 's4', message: 'test question' })
+    });
+    assert.equal(res.status, 500);
+    const body = await res.json();
+    assert.equal(body.error, 'Something went wrong. Please try again or leave your contact info.');
+  } finally {
+    server.close();
+  }
+});
+
+test('POST /api/chat handles insertMessage errors gracefully', async () => {
+  const db = freshDb();
+  let callCount = 0;
+  // insertMessage throws on second call (after user message)
+  const originalInsertMessage = db.insertMessage.bind(db);
+  db.insertMessage = (msg) => {
+    callCount++;
+    if (callCount === 2) {
+      throw new Error('Database constraint violation');
+    }
+    return originalInsertMessage(msg);
+  };
+  const app = createApp({ config, db, anthropicClient: fakeClient(true, 'Test answer'), model: 'fake' });
+  const server = app.listen(0);
+  const { port } = server.address();
+  try {
+    const res = await fetch(`http://localhost:${port}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId: 's5', message: 'test question' })
+    });
+    assert.equal(res.status, 500);
+    const body = await res.json();
+    assert.equal(body.error, 'Something went wrong. Please try again or leave your contact info.');
+  } finally {
+    server.close();
+  }
+});
