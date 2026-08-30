@@ -118,3 +118,35 @@ test('missing required fields returns 400 and does not create a lead row', async
     server.close();
   }
 });
+
+test('markLeadNotified failure after successful save returns 200 ok (regression test)', async () => {
+  const db = freshDb();
+  const { resendClient, twilioClient } = workingClients();
+
+  // Spy on markLeadNotified to make it throw
+  const originalMarkLeadNotified = db.markLeadNotified;
+  db.markLeadNotified = () => {
+    throw new Error('simulated markLeadNotified outage');
+  };
+
+  const app = createApp({ config, db, resendClient, twilioClient, fromEmail: 'leads@x.com', fromNumber: '+15125550199' });
+  const server = app.listen(0);
+  const { port } = server.address();
+  try {
+    const res = await fetch(`http://localhost:${port}/api/lead`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId: 's5', name: 'Mark', phone: '+15125550103', reason: 'need repair' })
+    });
+    const body = await res.json();
+    // Despite markLeadNotified throwing, response must still be 200 ok
+    assert.equal(res.status, 200);
+    assert.equal(body.ok, true);
+    assert(body.leadId);
+    // Lead must still be saved
+    const row = db.raw.prepare('SELECT * FROM leads WHERE id = ?').get(body.leadId);
+    assert.equal(row.name, 'Mark');
+  } finally {
+    server.close();
+  }
+});
