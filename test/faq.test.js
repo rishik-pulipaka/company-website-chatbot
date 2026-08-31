@@ -32,6 +32,14 @@ test('parses an out-of-scope JSON response', async () => {
   assert.equal(result.inScope, false);
 });
 
+test('strips a markdown code fence around JSON before parsing (regression test)', async () => {
+  const fencedText = '```json\n' + JSON.stringify({ inScope: true, answer: 'We are open Mon-Fri 8am-6pm.' }) + '\n```';
+  const client = fakeClient(fencedText);
+  const result = await answerQuestion({ config, message: 'what are your hours', anthropicClient: client, model: 'fake-model' });
+  assert.equal(result.inScope, true);
+  assert.match(result.answer, /8am-6pm/);
+});
+
 test('unparseable model response falls back to out-of-scope, does not throw', async () => {
   const client = fakeClient('not json at all');
   const result = await answerQuestion({ config, message: 'anything', anthropicClient: client, model: 'fake-model' });

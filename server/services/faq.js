@@ -18,6 +18,12 @@ function buildSystemPrompt(config) {
   return lines.join('\n');
 }
 
+function stripCodeFence(text) {
+  const trimmed = text.trim();
+  const fenceMatch = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+  return fenceMatch ? fenceMatch[1].trim() : trimmed;
+}
+
 function safeFallback() {
   return {
     inScope: false,
@@ -42,7 +48,8 @@ async function answerQuestion({ config, message, anthropicClient, model }) {
 
   try {
     const textBlock = response.content.find((b) => b.type === 'text');
-    const parsed = JSON.parse(textBlock.text);
+    const cleanedText = stripCodeFence(textBlock.text);
+    const parsed = JSON.parse(cleanedText);
     if (typeof parsed.inScope !== 'boolean' || typeof parsed.answer !== 'string') {
       throw new Error('unexpected response shape');
     }
