@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const path = require('node:path');
 const { createConfigRouter } = require('./routes/config.js');
 const { createChatRouter } = require('./routes/chat.js');
@@ -15,6 +16,7 @@ function createApp({
   fromNumber
 } = {}) {
   const app = express();
+  app.use(cors());
   app.use(express.json());
   app.use(express.static(path.join(__dirname, '..', 'widget')));
 
