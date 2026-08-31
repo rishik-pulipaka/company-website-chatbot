@@ -119,6 +119,33 @@ test('missing required fields returns 400 and does not create a lead row', async
   }
 });
 
+test('db.insertConversation failure returns 500 with client-safe error message (regression test)', async () => {
+  const db = freshDb();
+  const { resendClient, twilioClient } = workingClients();
+
+  db.insertConversation = () => {
+    throw new Error('simulated insertConversation outage');
+  };
+
+  const app = createApp({ config, db, resendClient, twilioClient, fromEmail: 'leads@x.com', fromNumber: '+15125550199' });
+  const server = app.listen(0);
+  const { port } = server.address();
+  try {
+    const res = await fetch(`http://localhost:${port}/api/lead`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId: 's6', name: 'Ivan', phone: '+15125550104', reason: 'no cooling' })
+    });
+    const body = await res.json();
+    assert.equal(res.status, 500);
+    assert.match(body.error, /could not save your request/i);
+    const count = db.raw.prepare('SELECT COUNT(*) AS c FROM leads').get().c;
+    assert.equal(count, 0);
+  } finally {
+    server.close();
+  }
+});
+
 test('markLeadNotified failure after successful save returns 200 ok (regression test)', async () => {
   const db = freshDb();
   const { resendClient, twilioClient } = workingClients();

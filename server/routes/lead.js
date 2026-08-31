@@ -11,10 +11,9 @@ function createLeadRouter({ config, db, resendClient, twilioClient, fromEmail, f
       return res.status(400).json({ error: 'name and phone are required' });
     }
 
-    const conversationId = sessionId ? db.insertConversation(sessionId) : null;
-
     let leadId;
     try {
+      const conversationId = sessionId ? db.insertConversation(sessionId) : null;
       leadId = db.insertLead({ conversationId, name, phone, reason });
     } catch (err) {
       // The one hard failure per spec: we cannot silently drop a lead.
