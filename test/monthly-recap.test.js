@@ -49,6 +49,30 @@ test('does not send twice for the same month', async () => {
   assert.match(second.reason, /already sent/i);
 });
 
+test('Resend returns {error} (v4 contract): does not mark month as sent, allows retry (regression test)', async () => {
+  const db = freshDb();
+  const resendClient = { emails: { send: async () => ({ data: null, error: { message: 'bad domain' } }) } };
+  const now = new Date('2026-08-01T06:00:00.000Z');
+
+  const result = await runMonthlyRecapIfDue({ db, config, resendClient, fromEmail: 'leads@x.com', now });
+
+  assert.equal(result.sent, false);
+  assert.equal(result.reason, 'bad domain');
+  assert.equal(db.hasRecapBeenSent('2026-07'), false);
+});
+
+test('Resend SDK call genuinely throws (e.g. network-layer failure): does not mark month as sent', async () => {
+  const db = freshDb();
+  const resendClient = { emails: { send: async () => { throw new Error('resend network failure'); } } };
+  const now = new Date('2026-08-01T06:00:00.000Z');
+
+  const result = await runMonthlyRecapIfDue({ db, config, resendClient, fromEmail: 'leads@x.com', now });
+
+  assert.equal(result.sent, false);
+  assert.match(result.reason, /resend network failure/);
+  assert.equal(db.hasRecapBeenSent('2026-07'), false);
+});
+
 test('missing owner email does not throw, reports not sent', async () => {
   const db = freshDb();
   const cfgNoEmail = { businessName: 'Acme HVAC', owner: { notificationEmail: null, notificationPhone: null } };

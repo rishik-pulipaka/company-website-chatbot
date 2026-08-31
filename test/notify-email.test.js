@@ -24,11 +24,18 @@ test('missing owner email returns ok:false without throwing', async () => {
   assert.match(result.error, /no owner email/i);
 });
 
-test('Resend API failure returns ok:false without throwing', async () => {
-  const resendClient = { emails: { send: async () => { throw new Error('resend down'); } } };
+test('Resend API returns {error} (v4 contract) -> returns ok:false without throwing', async () => {
+  const resendClient = { emails: { send: async () => ({ data: null, error: { message: 'resend down' } }) } };
   const result = await sendLeadEmail({ resendClient, config, lead, fromEmail: 'leads@x.com' });
   assert.equal(result.ok, false);
   assert.match(result.error, /resend down/);
+});
+
+test('Resend SDK call genuinely throws (e.g. network-layer failure) -> returns ok:false without throwing', async () => {
+  const resendClient = { emails: { send: async () => { throw new Error('resend network failure'); } } };
+  const result = await sendLeadEmail({ resendClient, config, lead, fromEmail: 'leads@x.com' });
+  assert.equal(result.ok, false);
+  assert.match(result.error, /resend network failure/);
 });
 
 test('missing resendClient (e.g. no API key configured) returns ok:false without throwing', async () => {

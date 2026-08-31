@@ -24,12 +24,16 @@ async function runMonthlyRecapIfDue({ db, config, resendClient, fromEmail, now =
   const stats = db.getRecapStats({ sinceIso, untilIso });
 
   try {
-    await resendClient.emails.send({
+    const { error } = await resendClient.emails.send({
       from: fromEmail,
       to: config.owner.notificationEmail,
       subject: `${config.businessName} chatbot recap for ${yearMonth}`,
       text: `Here's your monthly chatbot recap for ${yearMonth}:\n\n${stats.conversationCount} conversation${stats.conversationCount === 1 ? '' : 's'} handled\n${stats.leadCount} lead${stats.leadCount === 1 ? '' : 's'} captured\n`
     });
+    if (error) {
+      console.warn(`[monthly-recap] send failed: ${error.message || String(error)}`);
+      return { sent: false, reason: error.message || String(error) };
+    }
     db.markRecapSent(yearMonth);
     return { sent: true };
   } catch (err) {

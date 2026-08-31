@@ -9,12 +9,16 @@ async function sendLeadEmail({ resendClient, config, lead, fromEmail }) {
   }
 
   try {
-    await resendClient.emails.send({
+    const { data, error } = await resendClient.emails.send({
       from: fromEmail,
       to: config.owner.notificationEmail,
       subject: `New lead for ${config.businessName}: ${lead.name}`,
       text: `New lead from the website chatbot.\n\nName: ${lead.name}\nPhone: ${lead.phone}\nReason: ${lead.reason || '(not provided)'}\n`
     });
+    if (error) {
+      console.warn(`[notify-email] send failed: ${error.message || String(error)}`);
+      return { ok: false, error: error.message || String(error) };
+    }
     return { ok: true };
   } catch (err) {
     console.warn(`[notify-email] send failed: ${err.message}`);
