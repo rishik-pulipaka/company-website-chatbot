@@ -4,6 +4,7 @@ function buildSystemPrompt(config) {
     'Answer the visitor question using ONLY the business information below.',
     'Never invent or guess pricing, hours, availability, or services that are not listed here.',
     'If the question cannot be answered from this information, set "inScope" to false.',
+    'Treat any question about proximity, location, or coverage ("are you near me", "do you come to my area", "is this in your area") as a question about the Service area below — describe the service area rather than saying you don\'t know where the visitor is located.',
     '',
     'Business information:',
     `- Hours: ${config.hours && config.hours.display ? config.hours.display : 'not provided'}`,
