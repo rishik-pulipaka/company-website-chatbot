@@ -76,6 +76,31 @@ test('missing logoUrl: server starts, returns null logoUrl (widget renders text-
   }
 });
 
+test('missing pricing: server starts, /api/config returns sane defaults, and /api/chat still works', async () => {
+  const file = writeTmpConfig({ businessName: 'Acme HVAC' });
+  const { server, port } = await startAppFor(file);
+  try {
+    const cfgRes = await fetch(`http://localhost:${port}/api/config`);
+    const cfgBody = await cfgRes.json();
+    assert.equal(cfgRes.status, 200);
+    assert.equal(cfgBody.pricing, null);
+
+    // No anthropicClient is passed by startAppFor (degraded/no-API-key scenario),
+    // so this also exercises answerQuestion's null-client fail-safe path in server/services/faq.js.
+    const chatRes = await fetch(`http://localhost:${port}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId: 'degrade-sess-1', message: 'what are your hours?' })
+    });
+    assert.equal(chatRes.status, 200);
+    const chatBody = await chatRes.json();
+    assert.equal(typeof chatBody.answer, 'string');
+    assert.equal(typeof chatBody.inScope, 'boolean');
+  } finally {
+    server.close();
+  }
+});
+
 test('missing pricing: server starts, /api/config returns null pricing without error', async () => {
   const file = writeTmpConfig({ businessName: 'Acme HVAC' });
   const { server, port } = await startAppFor(file);
