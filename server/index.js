@@ -4,6 +4,7 @@ const path = require('node:path');
 const { createConfigRouter } = require('./routes/config.js');
 const { createChatRouter } = require('./routes/chat.js');
 const { createLeadRouter } = require('./routes/lead.js');
+const { createPublicApiLimiter } = require('./middleware/rate-limit.js');
 
 function createApp({
   config,
@@ -13,7 +14,8 @@ function createApp({
   twilioClient,
   model,
   fromEmail,
-  fromNumber
+  fromNumber,
+  rateLimit
 } = {}) {
   const app = express();
   app.use(cors());
@@ -28,6 +30,8 @@ function createApp({
     app.use('/api', createConfigRouter(config));
   }
   if (config && db) {
+    app.use('/api/chat', createPublicApiLimiter(rateLimit));
+    app.use('/api/lead', createPublicApiLimiter(rateLimit));
     app.use('/api', createChatRouter({ config, db, anthropicClient, model }));
     app.use('/api', createLeadRouter({ config, db, resendClient, twilioClient, fromEmail, fromNumber }));
   }
@@ -70,7 +74,11 @@ if (require.main === module) {
     resendClient,
     twilioClient,
     fromEmail: process.env.NOTIFY_FROM_EMAIL,
-    fromNumber: process.env.TWILIO_FROM_NUMBER
+    fromNumber: process.env.TWILIO_FROM_NUMBER,
+    rateLimit: {
+      windowMs: process.env.RATE_LIMIT_WINDOW_MS ? Number(process.env.RATE_LIMIT_WINDOW_MS) : undefined,
+      max: process.env.RATE_LIMIT_MAX ? Number(process.env.RATE_LIMIT_MAX) : undefined
+    }
   });
   app.listen(port, () => {
     console.log(`hvac-chatbot listening on port ${port}`);

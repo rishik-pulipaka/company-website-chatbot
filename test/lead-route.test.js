@@ -119,6 +119,107 @@ test('missing required fields returns 400 and does not create a lead row', async
   }
 });
 
+test('invalid phone number returns 400 and does not create a lead row', async () => {
+  const db = freshDb();
+  const { resendClient, twilioClient } = workingClients();
+  const app = createApp({ config, db, resendClient, twilioClient, fromEmail: 'leads@x.com', fromNumber: '+15125550199' });
+  const server = app.listen(0);
+  const { port } = server.address();
+  try {
+    const res = await fetch(`http://localhost:${port}/api/lead`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId: 's7', name: 'Bad Phone', phone: 'not a phone number', reason: 'test' })
+    });
+    assert.equal(res.status, 400);
+    const body = await res.json();
+    assert.match(body.error, /phone/i);
+    const count = db.raw.prepare('SELECT COUNT(*) AS c FROM leads').get().c;
+    assert.equal(count, 0);
+  } finally {
+    server.close();
+  }
+});
+
+test('too-short phone number ("123") returns 400', async () => {
+  const db = freshDb();
+  const { resendClient, twilioClient } = workingClients();
+  const app = createApp({ config, db, resendClient, twilioClient, fromEmail: 'leads@x.com', fromNumber: '+15125550199' });
+  const server = app.listen(0);
+  const { port } = server.address();
+  try {
+    const res = await fetch(`http://localhost:${port}/api/lead`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId: 's8', name: 'Short Phone', phone: '123', reason: 'test' })
+    });
+    assert.equal(res.status, 400);
+  } finally {
+    server.close();
+  }
+});
+
+test('real-looking phone numbers pass validation: E.164 and formatted US number', async () => {
+  const db = freshDb();
+  const { resendClient, twilioClient } = workingClients();
+  const app = createApp({ config, db, resendClient, twilioClient, fromEmail: 'leads@x.com', fromNumber: '+15125550199' });
+  const server = app.listen(0);
+  const { port } = server.address();
+  try {
+    const res1 = await fetch(`http://localhost:${port}/api/lead`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId: 's9', name: 'E164', phone: '+15125550100', reason: 'test' })
+    });
+    assert.equal(res1.status, 200);
+
+    const res2 = await fetch(`http://localhost:${port}/api/lead`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId: 's10', name: 'Formatted', phone: '(512) 555-0100', reason: 'test' })
+    });
+    assert.equal(res2.status, 200);
+  } finally {
+    server.close();
+  }
+});
+
+test('name over 200 chars returns 400', async () => {
+  const db = freshDb();
+  const { resendClient, twilioClient } = workingClients();
+  const app = createApp({ config, db, resendClient, twilioClient, fromEmail: 'leads@x.com', fromNumber: '+15125550199' });
+  const server = app.listen(0);
+  const { port } = server.address();
+  try {
+    const res = await fetch(`http://localhost:${port}/api/lead`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId: 's11', name: 'a'.repeat(201), phone: '+15125550100', reason: 'test' })
+    });
+    assert.equal(res.status, 400);
+  } finally {
+    server.close();
+  }
+});
+
+test('reason over 2000 chars returns 400', async () => {
+  const db = freshDb();
+  const { resendClient, twilioClient } = workingClients();
+  const app = createApp({ config, db, resendClient, twilioClient, fromEmail: 'leads@x.com', fromNumber: '+15125550199' });
+  const server = app.listen(0);
+  const { port } = server.address();
+  try {
+    const res = await fetch(`http://localhost:${port}/api/lead`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId: 's12', name: 'Long Reason', phone: '+15125550100', reason: 'a'.repeat(2001) })
+    });
+    assert.equal(res.status, 400);
+  } finally {
+    server.close();
+  }
+});
+
 test('db.insertConversation failure returns 500 with client-safe error message (regression test)', async () => {
   const db = freshDb();
   const { resendClient, twilioClient } = workingClients();

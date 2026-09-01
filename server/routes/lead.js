@@ -2,6 +2,16 @@ const express = require('express');
 const { sendLeadEmail } = require('../services/notify-email.js');
 const { sendLeadSms } = require('../services/notify-sms.js');
 
+const MAX_NAME_LENGTH = 200;
+const MAX_REASON_LENGTH = 2000;
+const PHONE_PATTERN = /^\+?[1-9]\d{6,14}$/;
+
+function looksLikePhoneNumber(phone) {
+  if (typeof phone !== 'string') return false;
+  const stripped = phone.replace(/[\s\-().]/g, '');
+  return PHONE_PATTERN.test(stripped);
+}
+
 function createLeadRouter({ config, db, resendClient, twilioClient, fromEmail, fromNumber }) {
   const router = express.Router();
 
@@ -9,6 +19,15 @@ function createLeadRouter({ config, db, resendClient, twilioClient, fromEmail, f
     const { sessionId, name, phone, reason } = req.body || {};
     if (!name || !phone) {
       return res.status(400).json({ error: 'name and phone are required' });
+    }
+    if (typeof name === 'string' && name.length > MAX_NAME_LENGTH) {
+      return res.status(400).json({ error: `name must be ${MAX_NAME_LENGTH} characters or fewer` });
+    }
+    if (typeof reason === 'string' && reason.length > MAX_REASON_LENGTH) {
+      return res.status(400).json({ error: `reason must be ${MAX_REASON_LENGTH} characters or fewer` });
+    }
+    if (!looksLikePhoneNumber(phone)) {
+      return res.status(400).json({ error: 'phone does not look like a valid phone number' });
     }
 
     let leadId;

@@ -116,6 +116,25 @@ test('POST /api/chat handles database errors gracefully', async () => {
   }
 });
 
+test('POST /api/chat with message over 1000 chars returns 400', async () => {
+  const db = freshDb();
+  const app = createApp({ config, db, anthropicClient: fakeClient(true, 'x'), model: 'fake' });
+  const server = app.listen(0);
+  const { port } = server.address();
+  try {
+    const res = await fetch(`http://localhost:${port}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId: 's-long', message: 'a'.repeat(1001) })
+    });
+    assert.equal(res.status, 400);
+    const body = await res.json();
+    assert.match(body.error, /1000/);
+  } finally {
+    server.close();
+  }
+});
+
 test('POST /api/chat handles insertMessage errors gracefully', async () => {
   const db = freshDb();
   let callCount = 0;

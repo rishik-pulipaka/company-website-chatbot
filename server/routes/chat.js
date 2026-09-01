@@ -1,6 +1,8 @@
 const express = require('express');
 const { answerQuestion } = require('../services/faq.js');
 
+const MAX_MESSAGE_LENGTH = 1000;
+
 function createChatRouter({ config, db, anthropicClient, model }) {
   const router = express.Router();
 
@@ -9,6 +11,9 @@ function createChatRouter({ config, db, anthropicClient, model }) {
       const { sessionId, message } = req.body || {};
       if (!sessionId || !message || typeof message !== 'string') {
         return res.status(400).json({ error: 'sessionId and message are required' });
+      }
+      if (message.length > MAX_MESSAGE_LENGTH) {
+        return res.status(400).json({ error: `message must be ${MAX_MESSAGE_LENGTH} characters or fewer` });
       }
 
       const conversationId = db.insertConversation(sessionId);
