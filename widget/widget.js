@@ -103,6 +103,20 @@
         host.style.setProperty('--hvac-primary', primaryColor);
         host.style.setProperty('--hvac-accent', accentColor);
         panel.querySelector('.hvac-title').textContent = cfg.businessName;
+
+        const header = panel.querySelector('.hvac-header');
+        const existingLogo = header.querySelector('.hvac-logo');
+        if (existingLogo) existingLogo.remove();
+
+        const logoUrl = cfg.branding && typeof cfg.branding.logoUrl === 'string' ? cfg.branding.logoUrl : null;
+        if (logoUrl) {
+          const logo = document.createElement('img');
+          logo.className = 'hvac-logo';
+          logo.src = logoUrl;
+          logo.alt = '';
+          logo.onerror = () => logo.remove();
+          header.insertBefore(logo, header.firstChild);
+        }
       }
 
       fetch(`${apiBase}/api/config`)
