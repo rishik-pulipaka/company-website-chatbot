@@ -81,4 +81,4 @@ Commit: `74aef1f` — "Exercise POST /api/chat in config-degradation tests"
 ```
 Full suite green: 90 total / 81 pass / 0 fail / 9 skipped (1 new test added on top of the prior 89).
 
-Commit: `<pending — see below>` — "Set trust proxy for Railway reverse-proxy deployment"
+Commit: `26dfb92` — "Set trust proxy for Railway reverse-proxy deployment"
