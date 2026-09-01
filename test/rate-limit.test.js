@@ -98,6 +98,29 @@ test('POST /api/lead returns 429 once the per-IP rate limit is exceeded', async 
   }
 });
 
+test('POST /api/chat with an X-Forwarded-For header does not 500 (trust proxy configured)', async () => {
+  const db = freshDb();
+  const app = createApp({
+    config,
+    db,
+    anthropicClient: fakeClient(),
+    model: 'fake',
+    rateLimit: { windowMs: 60_000, max: 3 }
+  });
+  const server = app.listen(0);
+  const { port } = server.address();
+  try {
+    const res = await fetch(`http://localhost:${port}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Forwarded-For': '203.0.113.5' },
+      body: JSON.stringify({ sessionId: 'rl-xff', message: 'hello' })
+    });
+    assert.equal(res.status, 200, 'expected the request to succeed instead of throwing ERR_ERL_UNEXPECTED_X_FORWARDED_FOR');
+  } finally {
+    server.close();
+  }
+});
+
 test('rate limits are independent per route: chat limit does not block lead requests', async () => {
   const db = freshDb();
   const app = createApp({

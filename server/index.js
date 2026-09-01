@@ -18,6 +18,12 @@ function createApp({
   rateLimit
 } = {}) {
   const app = express();
+  // Trust exactly one hop of reverse proxy (Railway sits in front of this app in
+  // production), so Express derives req.ip from X-Forwarded-For correctly. Without
+  // this, express-rate-limit v7 throws ERR_ERL_UNEXPECTED_X_FORWARDED_FOR whenever it
+  // sees that header, and rate limiting would otherwise key on the proxy's IP for
+  // every visitor instead of the real client IP.
+  app.set('trust proxy', 1);
   app.use(cors());
   app.use(express.json());
   app.use(express.static(path.join(__dirname, '..', 'widget')));
