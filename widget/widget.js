@@ -27,6 +27,16 @@
     return `Let me get your info so we can help with that.`;
   }
 
+  // Decide what the assistant bubble should say for a /api/chat response.
+  // The server sends `answer: ""` for out-of-scope questions, so fall back to
+  // an explicit hand-off line rather than rendering an empty bubble.
+  function chatReplyText(body) {
+    if (body && typeof body.answer === 'string' && body.answer.trim()) {
+      return body.answer;
+    }
+    return "I'm not sure about that one — leave your name and number below and someone from the team will follow up.";
+  }
+
   // --- Browser-only DOM wiring below; skipped entirely under Node (no `document`). ---
   if (typeof document !== 'undefined') {
     (function init() {
@@ -86,6 +96,21 @@
 
       function showLeadForm() {
         panel.querySelector('.hvac-lead-form').classList.remove('hvac-hidden');
+      }
+
+      function showTyping() {
+        const messages = panel.querySelector('.hvac-messages');
+        if (messages.querySelector('.hvac-typing')) return;
+        const el = document.createElement('div');
+        el.className = 'hvac-message hvac-message-assistant hvac-typing';
+        el.innerHTML = '<span></span><span></span><span></span>';
+        messages.appendChild(el);
+        messages.scrollTop = messages.scrollHeight;
+      }
+
+      function hideTyping() {
+        const el = panel.querySelector('.hvac-typing');
+        if (el) el.remove();
       }
 
       function applyBranding(cfg) {
@@ -155,6 +180,7 @@
         if (!message) return;
         appendMessage('user', message);
         input.value = '';
+        showTyping();
         try {
           const res = await fetch(`${apiBase}/api/chat`, {
             method: 'POST',
@@ -162,9 +188,11 @@
             body: JSON.stringify({ sessionId, message })
           });
           const body = await res.json();
-          appendMessage('assistant', body.answer);
+          hideTyping();
+          appendMessage('assistant', chatReplyText(body));
           if (!body.inScope) showLeadForm();
         } catch (err) {
+          hideTyping();
           appendMessage('assistant', "Sorry, I'm having trouble answering right now. Please leave your info below.");
           showLeadForm();
         }
@@ -196,6 +224,6 @@
   }
 
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { formatGreeting, buildQuickReplyAnswer };
+    module.exports = { formatGreeting, buildQuickReplyAnswer, chatReplyText };
   }
 })();
