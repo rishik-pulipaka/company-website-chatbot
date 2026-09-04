@@ -79,6 +79,7 @@
           <input type="tel" name="phone" placeholder="Phone number" required />
           <textarea name="reason" placeholder="What do you need help with?"></textarea>
           <button type="submit">Send request</button>
+          <p class="hvac-consent">By submitting, you agree to receive a text message about your request. Msg &amp; data rates may apply. Reply STOP to opt out.</p>
         </form>
       `;
       shadow.appendChild(panel);

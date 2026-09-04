@@ -172,6 +172,13 @@
   flex: 1;
 }
 
+.hvac-consent {
+  margin: 4px 0 0;
+  font-size: 11px;
+  line-height: 1.35;
+  color: #6b7280;
+}
+
 .hvac-input-row button,
 .hvac-lead-form button {
   background: var(--hvac-accent);
