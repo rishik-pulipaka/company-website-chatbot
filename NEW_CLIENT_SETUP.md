@@ -37,8 +37,8 @@ folder and fill in the client's real info:
 Copy `.env.example` to `.env` and fill in:
 
 - `ANTHROPIC_API_KEY` — same key can be reused across all clients.
-- `SENDGRID_API_KEY`, `NOTIFY_FROM_EMAIL` — same SendGrid account and
-  verified sender can be reused for every client. Lead emails send from
+- `BREVO_API_KEY`, `NOTIFY_FROM_EMAIL` — same Brevo account and verified
+  sender can be reused for every client. Lead emails send from
   `NOTIFY_FROM_EMAIL`.
 - `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`,
   `TWILIO_MESSAGING_SERVICE_SID` — same Twilio account can be reused, or

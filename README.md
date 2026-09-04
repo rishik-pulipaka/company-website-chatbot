@@ -35,8 +35,8 @@ widget on a local test HTML page with:
 | `DATA_DB_PATH` | no (default `./data/leads.sqlite`) | SQLite file location |
 | `ANTHROPIC_API_KEY` | yes, for FAQ answering | Claude API key |
 | `ANTHROPIC_MODEL` | no (default `claude-haiku-4-5-20251001`) | model id override |
-| `SENDGRID_API_KEY` | yes, for owner email notifications | SendGrid API key with "Mail Send" permission |
-| `NOTIFY_FROM_EMAIL` | yes, for owner email notifications | From address; must be a verified sender in SendGrid |
+| `BREVO_API_KEY` | yes, for owner email notifications | Brevo API key |
+| `NOTIFY_FROM_EMAIL` | yes, for owner email notifications | From address; must be a verified sender in Brevo |
 | `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` | yes, for visitor SMS | Twilio credentials |
 | `TWILIO_FROM_NUMBER` | yes, for visitor SMS | Twilio phone number, E.164 format |
 
@@ -79,14 +79,13 @@ external cron trigger.
 6. Point the client's DNS/subdomain at the Railway service, or use the
    Railway-provided URL directly in the widget `<script>` tag.
 
-**Email:** [SendGrid](https://sendgrid.com) via its HTTPS API (Railway
-blocks outbound SMTP on lower tiers, so SMTP-based providers won't work).
-Verify a single sender address (Settings → Sender Authentication → Single
-Sender Verification) — no domain required — or verify a domain, then
-create an API key with "Mail Send" permission and set `SENDGRID_API_KEY`
-and `NOTIFY_FROM_EMAIL`. One SendGrid account serves every client; the
-free tier's 100 emails/day is far above what a handful of clients
-generate.
+**Email:** [Brevo](https://brevo.com) via its HTTPS API (Railway blocks
+outbound SMTP on lower tiers, so SMTP-based providers won't work). Verify
+a sender address (Settings → Senders, Domains & Dedicated IPs → Senders)
+— no domain required — then create an API key (Settings → SMTP & API →
+API Keys) and set `BREVO_API_KEY` and `NOTIFY_FROM_EMAIL`. One Brevo
+account serves every client; the free tier's 300 emails/day is far above
+what a handful of clients generate.
 
 **SMS:** [Twilio](https://twilio.com) — buy/verify a phone number, set
 `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`.
