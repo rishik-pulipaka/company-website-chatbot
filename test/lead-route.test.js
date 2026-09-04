@@ -19,6 +19,18 @@ function freshDb() {
   return createDb(path.join(os.tmpdir(), `lead-test-${Date.now()}-${Math.random()}.sqlite`));
 }
 
+// The lead route responds as soon as the lead is saved and sends email/SMS in the
+// background, marking the row (notified_at) when that finishes. Poll for that.
+async function waitForNotified(db, leadId, timeoutMs = 3000) {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    const row = db.raw.prepare('SELECT * FROM leads WHERE id = ? AND notified_at IS NOT NULL').get(leadId);
+    if (row) return row;
+    await new Promise((r) => setTimeout(r, 20));
+  }
+  throw new Error(`lead ${leadId} was not marked notified within ${timeoutMs}ms`);
+}
+
 function workingClients() {
   return {
     mailer: { sendMail: async () => ({ messageId: 'e1' }) },
@@ -41,7 +53,7 @@ test('happy path: lead saved, email sent, sms sent', async () => {
     const body = await res.json();
     assert.equal(res.status, 200);
     assert.equal(body.ok, true);
-    const row = db.raw.prepare('SELECT * FROM leads WHERE id = ?').get(body.leadId);
+    const row = await waitForNotified(db, body.leadId);
     assert.equal(row.name, 'Jane');
     assert.equal(row.email_sent, 1);
     assert.equal(row.sms_sent, 1);
@@ -66,7 +78,7 @@ test('simulated SMS failure: lead still saved, still emailed, response still ok'
     const body = await res.json();
     assert.equal(res.status, 200);
     assert.equal(body.ok, true);
-    const row = db.raw.prepare('SELECT * FROM leads WHERE id = ?').get(body.leadId);
+    const row = await waitForNotified(db, body.leadId);
     assert.equal(row.name, 'Bob');
     assert.equal(row.email_sent, 1);
     assert.equal(row.sms_sent, 0);
@@ -91,7 +103,7 @@ test('simulated email failure: lead still saved, sms still attempted, response s
     const body = await res.json();
     assert.equal(res.status, 200);
     assert.equal(body.ok, true);
-    const row = db.raw.prepare('SELECT * FROM leads WHERE id = ?').get(body.leadId);
+    const row = await waitForNotified(db, body.leadId);
     assert.equal(row.email_sent, 0);
     assert.equal(row.sms_sent, 1);
   } finally {
@@ -271,7 +283,9 @@ test('markLeadNotified failure after successful save returns 200 ok (regression 
     assert.equal(res.status, 200);
     assert.equal(body.ok, true);
     assert(body.leadId);
-    // Lead must still be saved
+    // Lead must still be saved (the row is written before the response; the
+    // background markLeadNotified throwing must not undo or hide that).
+    await new Promise((r) => setTimeout(r, 100));
     const row = db.raw.prepare('SELECT * FROM leads WHERE id = ?').get(body.leadId);
     assert.equal(row.name, 'Mark');
   } finally {

@@ -27,7 +27,8 @@ CREATE TABLE IF NOT EXISTS leads (
   reason TEXT,
   created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
   email_sent INTEGER NOT NULL DEFAULT 0,
-  sms_sent INTEGER NOT NULL DEFAULT 0
+  sms_sent INTEGER NOT NULL DEFAULT 0,
+  notified_at TEXT
 );
 
 CREATE TABLE IF NOT EXISTS missed_questions (
@@ -51,6 +52,16 @@ function createDb(filePath) {
   const raw = new Database(filePath);
   raw.pragma('journal_mode = WAL');
   raw.exec(SCHEMA);
+
+  // Migrations for databases created before a column existed. ALTER TABLE throws
+  // "duplicate column name" if it's already there — safe to ignore.
+  for (const stmt of ["ALTER TABLE leads ADD COLUMN notified_at TEXT"]) {
+    try {
+      raw.exec(stmt);
+    } catch (err) {
+      if (!/duplicate column name/i.test(err.message)) throw err;
+    }
+  }
 
   function insertConversation(sessionId) {
     const existing = raw.prepare('SELECT id FROM conversations WHERE session_id = ?').get(sessionId);
@@ -82,7 +93,9 @@ function createDb(filePath) {
 
   function markLeadNotified({ leadId, emailSent, smsSent }) {
     raw
-      .prepare('UPDATE leads SET email_sent = ?, sms_sent = ? WHERE id = ?')
+      .prepare(
+        "UPDATE leads SET email_sent = ?, sms_sent = ?, notified_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = ?"
+      )
       .run(emailSent ? 1 : 0, smsSent ? 1 : 0, leadId);
   }
 

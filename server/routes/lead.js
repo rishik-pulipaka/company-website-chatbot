@@ -44,23 +44,28 @@ function createLeadRouter({ config, db, mailer, twilioClient, fromEmail, fromNum
 
     const lead = { name, phone, reason };
 
-    const [emailResult, smsResult] = await Promise.allSettled([
+    // The lead is saved — that's the only thing the visitor's confirmation depends
+    // on, so respond now. Email and SMS run in the background: a slow or
+    // misconfigured provider must never delay or block the visitor (a broken SMTP
+    // host, for example, can hang for two minutes before timing out).
+    res.json({ ok: true, leadId });
+
+    const notified = Promise.allSettled([
       sendLeadEmail({ mailer, config, lead, fromEmail }),
       sendLeadSms({ twilioClient, config, lead, fromNumber, messagingServiceSid })
-    ]);
+    ]).then(([emailResult, smsResult]) => {
+      const emailOk = emailResult.status === 'fulfilled' && emailResult.value.ok;
+      const smsOk = smsResult.status === 'fulfilled' && smsResult.value.ok;
+      try {
+        db.markLeadNotified({ leadId, emailSent: emailOk, smsSent: smsOk });
+      } catch (err) {
+        console.error(`[lead] FAILED TO MARK NOTIFICATION STATUS: ${err.message}`, { leadId });
+      }
+    });
 
-    const emailOk = emailResult.status === 'fulfilled' && emailResult.value.ok;
-    const smsOk = smsResult.status === 'fulfilled' && smsResult.value.ok;
-
-    // Wrap markLeadNotified in its own try/catch that logs but doesn't affect response.
-    // Once the lead is saved, we must return success regardless of post-save failures.
-    try {
-      db.markLeadNotified({ leadId, emailSent: emailOk, smsSent: smsOk });
-    } catch (err) {
-      console.error(`[lead] FAILED TO MARK NOTIFICATION STATUS: ${err.message}`, { leadId });
-    }
-
-    res.json({ ok: true, leadId });
+    // Surface the in-flight notification work so tests can await it. Never rejects
+    // (Promise.allSettled), so no unhandled-rejection risk in production.
+    router.lastNotified = notified;
   });
 
   return router;
