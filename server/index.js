@@ -57,22 +57,16 @@ module.exports = { createApp };
 if (require.main === module) {
   require('dotenv').config();
   const { Anthropic } = require('@anthropic-ai/sdk');
-  const nodemailer = require('nodemailer');
   const twilio = require('twilio');
   const { loadConfig } = require('./config-loader.js');
   const { createDb } = require('./db.js');
+  const { createMailer } = require('./services/mailer.js');
 
   const config = loadConfig(process.env.CONFIG_PATH || path.join(__dirname, '..', 'client-config.json'));
   const db = createDb(process.env.DATA_DB_PATH || path.join(__dirname, '..', 'data', 'leads.sqlite'));
   const anthropicClient = process.env.ANTHROPIC_API_KEY ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY }) : null;
   const model = process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5-20251001';
-  const mailer =
-    process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD
-      ? nodemailer.createTransport({
-          service: 'gmail',
-          auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD }
-        })
-      : null;
+  const mailer = createMailer();
   const twilioClient =
     process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN
       ? twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
@@ -86,7 +80,7 @@ if (require.main === module) {
     model,
     mailer,
     twilioClient,
-    fromEmail: process.env.NOTIFY_FROM_EMAIL || process.env.GMAIL_USER,
+    fromEmail: process.env.NOTIFY_FROM_EMAIL,
     fromNumber: process.env.TWILIO_FROM_NUMBER,
     messagingServiceSid: process.env.TWILIO_MESSAGING_SERVICE_SID,
     rateLimit: {

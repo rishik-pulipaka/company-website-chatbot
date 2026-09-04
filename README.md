@@ -35,9 +35,8 @@ widget on a local test HTML page with:
 | `DATA_DB_PATH` | no (default `./data/leads.sqlite`) | SQLite file location |
 | `ANTHROPIC_API_KEY` | yes, for FAQ answering | Claude API key |
 | `ANTHROPIC_MODEL` | no (default `claude-haiku-4-5-20251001`) | model id override |
-| `GMAIL_USER` | yes, for owner email notifications | Gmail address to send from |
-| `GMAIL_APP_PASSWORD` | yes, for owner email notifications | Google App Password (16 chars), not the account password |
-| `NOTIFY_FROM_EMAIL` | no (defaults to `GMAIL_USER`) | override From address (must be a verified Gmail alias) |
+| `SENDGRID_API_KEY` | yes, for owner email notifications | SendGrid API key with "Mail Send" permission |
+| `NOTIFY_FROM_EMAIL` | yes, for owner email notifications | From address; must be a verified sender in SendGrid |
 | `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` | yes, for visitor SMS | Twilio credentials |
 | `TWILIO_FROM_NUMBER` | yes, for visitor SMS | Twilio phone number, E.164 format |
 
@@ -80,11 +79,14 @@ external cron trigger.
 6. Point the client's DNS/subdomain at the Railway service, or use the
    Railway-provided URL directly in the widget `<script>` tag.
 
-**Email:** Gmail SMTP via `nodemailer`. Enable 2-Step Verification on the
-Google account, create an **App Password** (Google Account → Security →
-2-Step Verification → App passwords), then set `GMAIL_USER` and
-`GMAIL_APP_PASSWORD`. One Gmail account can serve every client. Sends
-~500 emails/day max, well above what a handful of clients generate.
+**Email:** [SendGrid](https://sendgrid.com) via its HTTPS API (Railway
+blocks outbound SMTP on lower tiers, so SMTP-based providers won't work).
+Verify a single sender address (Settings → Sender Authentication → Single
+Sender Verification) — no domain required — or verify a domain, then
+create an API key with "Mail Send" permission and set `SENDGRID_API_KEY`
+and `NOTIFY_FROM_EMAIL`. One SendGrid account serves every client; the
+free tier's 100 emails/day is far above what a handful of clients
+generate.
 
 **SMS:** [Twilio](https://twilio.com) — buy/verify a phone number, set
 `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`.

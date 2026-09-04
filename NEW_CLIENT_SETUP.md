@@ -37,12 +37,13 @@ folder and fill in the client's real info:
 Copy `.env.example` to `.env` and fill in:
 
 - `ANTHROPIC_API_KEY` — same key can be reused across all clients.
-- `GMAIL_USER`, `GMAIL_APP_PASSWORD` — same Gmail account (with an App
-  Password) can be reused for every client. Lead emails send from this
-  address.
-- `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER` — same
-  Twilio account can be reused, or use a client-specific number if you
-  want the SMS to come from a locally-recognizable number.
+- `SENDGRID_API_KEY`, `NOTIFY_FROM_EMAIL` — same SendGrid account and
+  verified sender can be reused for every client. Lead emails send from
+  `NOTIFY_FROM_EMAIL`.
+- `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`,
+  `TWILIO_MESSAGING_SERVICE_SID` — same Twilio account can be reused, or
+  use a client-specific number if you want the SMS to come from a
+  locally-recognizable number.
 - `DATA_DB_PATH` — leave as `./data/leads.sqlite`; each deployed instance
   gets its own file automatically.
 
