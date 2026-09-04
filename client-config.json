@@ -1,0 +1,35 @@
+{
+  "businessName": "Lone Star Comfort Heating & Air",
+  "hours": {
+    "display": "Mon-Fri 8:00am-6:00pm, Sat 9:00am-2:00pm, closed Sunday",
+    "timezone": "America/Chicago",
+    "schedule": {
+      "monday": { "open": "08:00", "close": "18:00" },
+      "tuesday": { "open": "08:00", "close": "18:00" },
+      "wednesday": { "open": "08:00", "close": "18:00" },
+      "thursday": { "open": "08:00", "close": "18:00" },
+      "friday": { "open": "08:00", "close": "18:00" },
+      "saturday": { "open": "09:00", "close": "14:00" },
+      "sunday": null
+    }
+  },
+  "serviceArea": "We serve the greater Austin, Texas metro area, including Round Rock, Cedar Park, and Pflugerville, within about a 25-mile radius of downtown Austin.",
+  "pricing": "Diagnostic visits are a flat $99, which is credited toward any repair we perform. Most common repairs range from $150-$600. Full system replacements are quoted after an on-site inspection.",
+  "services": [
+    "AC repair and maintenance",
+    "Furnace repair and installation",
+    "Duct cleaning and sealing",
+    "Thermostat installation",
+    "Full HVAC system replacement",
+    "Indoor air quality assessments"
+  ],
+  "branding": {
+    "primaryColor": "#0b1f3a",
+    "accentColor": "#d9603b",
+    "logoUrl": null
+  },
+  "owner": {
+    "notificationEmail": "recordedbyrishik@gmail.com",
+    "notificationPhone": "+16614142847"
+  }
+}
