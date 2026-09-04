@@ -3,3 +3,6 @@ data/
 .env
 *.sqlite
 *.sqlite-journal
+
+# Claude Code local worktrees / session data
+.claude/
