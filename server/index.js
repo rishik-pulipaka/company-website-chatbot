@@ -15,6 +15,7 @@ function createApp({
   model,
   fromEmail,
   fromNumber,
+  messagingServiceSid,
   rateLimit
 } = {}) {
   const app = express();
@@ -39,7 +40,7 @@ function createApp({
     app.use('/api/chat', createPublicApiLimiter(rateLimit));
     app.use('/api/lead', createPublicApiLimiter(rateLimit));
     app.use('/api', createChatRouter({ config, db, anthropicClient, model }));
-    app.use('/api', createLeadRouter({ config, db, mailer, twilioClient, fromEmail, fromNumber }));
+    app.use('/api', createLeadRouter({ config, db, mailer, twilioClient, fromEmail, fromNumber, messagingServiceSid }));
   }
 
   app.locals.config = config;
@@ -87,6 +88,7 @@ if (require.main === module) {
     twilioClient,
     fromEmail: process.env.NOTIFY_FROM_EMAIL || process.env.GMAIL_USER,
     fromNumber: process.env.TWILIO_FROM_NUMBER,
+    messagingServiceSid: process.env.TWILIO_MESSAGING_SERVICE_SID,
     rateLimit: {
       windowMs: process.env.RATE_LIMIT_WINDOW_MS ? Number(process.env.RATE_LIMIT_WINDOW_MS) : undefined,
       max: process.env.RATE_LIMIT_MAX ? Number(process.env.RATE_LIMIT_MAX) : undefined

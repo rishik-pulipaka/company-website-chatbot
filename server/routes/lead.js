@@ -12,7 +12,7 @@ function looksLikePhoneNumber(phone) {
   return PHONE_PATTERN.test(stripped);
 }
 
-function createLeadRouter({ config, db, mailer, twilioClient, fromEmail, fromNumber }) {
+function createLeadRouter({ config, db, mailer, twilioClient, fromEmail, fromNumber, messagingServiceSid }) {
   const router = express.Router();
 
   router.post('/lead', async (req, res) => {
@@ -46,7 +46,7 @@ function createLeadRouter({ config, db, mailer, twilioClient, fromEmail, fromNum
 
     const [emailResult, smsResult] = await Promise.allSettled([
       sendLeadEmail({ mailer, config, lead, fromEmail }),
-      sendLeadSms({ twilioClient, config, lead, fromNumber })
+      sendLeadSms({ twilioClient, config, lead, fromNumber, messagingServiceSid })
     ]);
 
     const emailOk = emailResult.status === 'fulfilled' && emailResult.value.ok;

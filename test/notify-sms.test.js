@@ -15,6 +15,21 @@ test('sends sms successfully', async () => {
   assert.match(captured.body, /Acme HVAC/);
 });
 
+test('uses messagingServiceSid instead of from when one is provided', async () => {
+  let captured = null;
+  const twilioClient = { messages: { create: async (args) => { captured = args; return { sid: 'SM123' }; } } };
+  const result = await sendLeadSms({
+    twilioClient,
+    config,
+    lead,
+    fromNumber: '+15125550199',
+    messagingServiceSid: 'MG0000000000000000000000000000000'
+  });
+  assert.equal(result.ok, true);
+  assert.equal(captured.messagingServiceSid, 'MG0000000000000000000000000000000');
+  assert.equal(captured.from, undefined);
+});
+
 test('Twilio API failure returns ok:false without throwing (simulated SMS failure)', async () => {
   const twilioClient = { messages: { create: async () => { throw new Error('simulated Twilio outage'); } } };
   const result = await sendLeadSms({ twilioClient, config, lead, fromNumber: '+15125550199' });
