@@ -35,8 +35,9 @@ widget on a local test HTML page with:
 | `DATA_DB_PATH` | no (default `./data/leads.sqlite`) | SQLite file location |
 | `ANTHROPIC_API_KEY` | yes, for FAQ answering | Claude API key |
 | `ANTHROPIC_MODEL` | no (default `claude-haiku-4-5-20251001`) | model id override |
-| `RESEND_API_KEY` | yes, for owner email notifications | Resend API key |
-| `NOTIFY_FROM_EMAIL` | yes, for owner email notifications | verified Resend sending address |
+| `GMAIL_USER` | yes, for owner email notifications | Gmail address to send from |
+| `GMAIL_APP_PASSWORD` | yes, for owner email notifications | Google App Password (16 chars), not the account password |
+| `NOTIFY_FROM_EMAIL` | no (defaults to `GMAIL_USER`) | override From address (must be a verified Gmail alias) |
 | `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` | yes, for visitor SMS | Twilio credentials |
 | `TWILIO_FROM_NUMBER` | yes, for visitor SMS | Twilio phone number, E.164 format |
 
@@ -79,9 +80,11 @@ external cron trigger.
 6. Point the client's DNS/subdomain at the Railway service, or use the
    Railway-provided URL directly in the widget `<script>` tag.
 
-**Email:** [Resend](https://resend.com) — verify a sending domain (or use
-their shared domain for testing), then set `RESEND_API_KEY` and
-`NOTIFY_FROM_EMAIL`.
+**Email:** Gmail SMTP via `nodemailer`. Enable 2-Step Verification on the
+Google account, create an **App Password** (Google Account → Security →
+2-Step Verification → App passwords), then set `GMAIL_USER` and
+`GMAIL_APP_PASSWORD`. One Gmail account can serve every client. Sends
+~500 emails/day max, well above what a handful of clients generate.
 
 **SMS:** [Twilio](https://twilio.com) — buy/verify a phone number, set
 `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`.

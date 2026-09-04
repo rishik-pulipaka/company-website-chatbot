@@ -9,14 +9,14 @@ function previousMonthRange(now) {
   return { sinceIso: prevMonthStart.toISOString(), untilIso: thisMonthStart.toISOString(), yearMonth };
 }
 
-async function runMonthlyRecapIfDue({ db, config, resendClient, fromEmail, now = new Date() }) {
+async function runMonthlyRecapIfDue({ db, config, mailer, fromEmail, now = new Date() }) {
   const { sinceIso, untilIso, yearMonth } = previousMonthRange(now);
 
   if (db.hasRecapBeenSent(yearMonth)) {
     return { sent: false, reason: 'already sent for this month' };
   }
 
-  if (!config.owner || !config.owner.notificationEmail || !resendClient) {
+  if (!config.owner || !config.owner.notificationEmail || !mailer) {
     console.warn('[monthly-recap] no owner email or email client configured; skipping recap send.');
     return { sent: false, reason: 'no owner email or email client configured' };
   }
@@ -24,16 +24,12 @@ async function runMonthlyRecapIfDue({ db, config, resendClient, fromEmail, now =
   const stats = db.getRecapStats({ sinceIso, untilIso });
 
   try {
-    const { error } = await resendClient.emails.send({
+    await mailer.sendMail({
       from: fromEmail,
       to: config.owner.notificationEmail,
       subject: `${config.businessName} chatbot recap for ${yearMonth}`,
       text: `Here's your monthly chatbot recap for ${yearMonth}:\n\n${stats.conversationCount} conversation${stats.conversationCount === 1 ? '' : 's'} handled\n${stats.leadCount} lead${stats.leadCount === 1 ? '' : 's'} captured\n`
     });
-    if (error) {
-      console.warn(`[monthly-recap] send failed: ${error.message || String(error)}`);
-      return { sent: false, reason: error.message || String(error) };
-    }
     db.markRecapSent(yearMonth);
     return { sent: true };
   } catch (err) {
@@ -42,11 +38,11 @@ async function runMonthlyRecapIfDue({ db, config, resendClient, fromEmail, now =
   }
 }
 
-function scheduleMonthlyRecap({ db, config, resendClient, fromEmail }) {
+function scheduleMonthlyRecap({ db, config, mailer, fromEmail }) {
   // Runs daily at 06:00 server time; the "already sent this month" check inside
   // runMonthlyRecapIfDue makes this safe to check every day without duplicate sends.
   cron.schedule('0 6 * * *', () => {
-    runMonthlyRecapIfDue({ db, config, resendClient, fromEmail }).catch((err) => {
+    runMonthlyRecapIfDue({ db, config, mailer, fromEmail }).catch((err) => {
       console.error(`[monthly-recap] unexpected error: ${err.message}`);
     });
   });

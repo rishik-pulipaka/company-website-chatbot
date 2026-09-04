@@ -69,7 +69,7 @@ test('POST /api/lead returns 429 once the per-IP rate limit is exceeded', async 
   const app = createApp({
     config,
     db,
-    resendClient: { emails: { send: async () => ({ data: { id: 'e1' } }) } },
+    mailer: { sendMail: async () => ({ messageId: 'e1' }) },
     twilioClient: { messages: { create: async () => ({ sid: 'SM1' }) } },
     fromEmail: 'leads@x.com',
     fromNumber: '+15125550199',
@@ -128,7 +128,7 @@ test('rate limits are independent per route: chat limit does not block lead requ
     db,
     anthropicClient: fakeClient(),
     model: 'fake',
-    resendClient: { emails: { send: async () => ({ data: { id: 'e1' } }) } },
+    mailer: { sendMail: async () => ({ messageId: 'e1' }) },
     twilioClient: { messages: { create: async () => ({ sid: 'SM1' }) } },
     fromEmail: 'leads@x.com',
     fromNumber: '+15125550199',

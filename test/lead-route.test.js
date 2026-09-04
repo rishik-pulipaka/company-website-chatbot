@@ -21,15 +21,15 @@ function freshDb() {
 
 function workingClients() {
   return {
-    resendClient: { emails: { send: async () => ({ data: { id: 'e1' } }) } },
+    mailer: { sendMail: async () => ({ messageId: 'e1' }) },
     twilioClient: { messages: { create: async () => ({ sid: 'SM1' }) } }
   };
 }
 
 test('happy path: lead saved, email sent, sms sent', async () => {
   const db = freshDb();
-  const { resendClient, twilioClient } = workingClients();
-  const app = createApp({ config, db, resendClient, twilioClient, fromEmail: 'leads@x.com', fromNumber: '+15125550199' });
+  const { mailer, twilioClient } = workingClients();
+  const app = createApp({ config, db, mailer, twilioClient, fromEmail: 'leads@x.com', fromNumber: '+15125550199' });
   const server = app.listen(0);
   const { port } = server.address();
   try {
@@ -52,9 +52,9 @@ test('happy path: lead saved, email sent, sms sent', async () => {
 
 test('simulated SMS failure: lead still saved, still emailed, response still ok', async () => {
   const db = freshDb();
-  const { resendClient } = workingClients();
+  const { mailer } = workingClients();
   const failingTwilioClient = { messages: { create: async () => { throw new Error('simulated Twilio outage'); } } };
-  const app = createApp({ config, db, resendClient, twilioClient: failingTwilioClient, fromEmail: 'leads@x.com', fromNumber: '+15125550199' });
+  const app = createApp({ config, db, mailer, twilioClient: failingTwilioClient, fromEmail: 'leads@x.com', fromNumber: '+15125550199' });
   const server = app.listen(0);
   const { port } = server.address();
   try {
@@ -78,8 +78,8 @@ test('simulated SMS failure: lead still saved, still emailed, response still ok'
 test('simulated email failure: lead still saved, sms still attempted, response still ok', async () => {
   const db = freshDb();
   const { twilioClient } = workingClients();
-  const failingResendClient = { emails: { send: async () => { throw new Error('simulated Resend outage'); } } };
-  const app = createApp({ config, db, resendClient: failingResendClient, twilioClient, fromEmail: 'leads@x.com', fromNumber: '+15125550199' });
+  const failingMailer = { sendMail: async () => { throw new Error('simulated email outage'); } };
+  const app = createApp({ config, db, mailer: failingMailer, twilioClient, fromEmail: 'leads@x.com', fromNumber: '+15125550199' });
   const server = app.listen(0);
   const { port } = server.address();
   try {
@@ -101,8 +101,8 @@ test('simulated email failure: lead still saved, sms still attempted, response s
 
 test('missing required fields returns 400 and does not create a lead row', async () => {
   const db = freshDb();
-  const { resendClient, twilioClient } = workingClients();
-  const app = createApp({ config, db, resendClient, twilioClient, fromEmail: 'leads@x.com', fromNumber: '+15125550199' });
+  const { mailer, twilioClient } = workingClients();
+  const app = createApp({ config, db, mailer, twilioClient, fromEmail: 'leads@x.com', fromNumber: '+15125550199' });
   const server = app.listen(0);
   const { port } = server.address();
   try {
@@ -121,8 +121,8 @@ test('missing required fields returns 400 and does not create a lead row', async
 
 test('invalid phone number returns 400 and does not create a lead row', async () => {
   const db = freshDb();
-  const { resendClient, twilioClient } = workingClients();
-  const app = createApp({ config, db, resendClient, twilioClient, fromEmail: 'leads@x.com', fromNumber: '+15125550199' });
+  const { mailer, twilioClient } = workingClients();
+  const app = createApp({ config, db, mailer, twilioClient, fromEmail: 'leads@x.com', fromNumber: '+15125550199' });
   const server = app.listen(0);
   const { port } = server.address();
   try {
@@ -143,8 +143,8 @@ test('invalid phone number returns 400 and does not create a lead row', async ()
 
 test('too-short phone number ("123") returns 400', async () => {
   const db = freshDb();
-  const { resendClient, twilioClient } = workingClients();
-  const app = createApp({ config, db, resendClient, twilioClient, fromEmail: 'leads@x.com', fromNumber: '+15125550199' });
+  const { mailer, twilioClient } = workingClients();
+  const app = createApp({ config, db, mailer, twilioClient, fromEmail: 'leads@x.com', fromNumber: '+15125550199' });
   const server = app.listen(0);
   const { port } = server.address();
   try {
@@ -161,8 +161,8 @@ test('too-short phone number ("123") returns 400', async () => {
 
 test('real-looking phone numbers pass validation: E.164 and formatted US number', async () => {
   const db = freshDb();
-  const { resendClient, twilioClient } = workingClients();
-  const app = createApp({ config, db, resendClient, twilioClient, fromEmail: 'leads@x.com', fromNumber: '+15125550199' });
+  const { mailer, twilioClient } = workingClients();
+  const app = createApp({ config, db, mailer, twilioClient, fromEmail: 'leads@x.com', fromNumber: '+15125550199' });
   const server = app.listen(0);
   const { port } = server.address();
   try {
@@ -186,8 +186,8 @@ test('real-looking phone numbers pass validation: E.164 and formatted US number'
 
 test('name over 200 chars returns 400', async () => {
   const db = freshDb();
-  const { resendClient, twilioClient } = workingClients();
-  const app = createApp({ config, db, resendClient, twilioClient, fromEmail: 'leads@x.com', fromNumber: '+15125550199' });
+  const { mailer, twilioClient } = workingClients();
+  const app = createApp({ config, db, mailer, twilioClient, fromEmail: 'leads@x.com', fromNumber: '+15125550199' });
   const server = app.listen(0);
   const { port } = server.address();
   try {
@@ -204,8 +204,8 @@ test('name over 200 chars returns 400', async () => {
 
 test('reason over 2000 chars returns 400', async () => {
   const db = freshDb();
-  const { resendClient, twilioClient } = workingClients();
-  const app = createApp({ config, db, resendClient, twilioClient, fromEmail: 'leads@x.com', fromNumber: '+15125550199' });
+  const { mailer, twilioClient } = workingClients();
+  const app = createApp({ config, db, mailer, twilioClient, fromEmail: 'leads@x.com', fromNumber: '+15125550199' });
   const server = app.listen(0);
   const { port } = server.address();
   try {
@@ -222,13 +222,13 @@ test('reason over 2000 chars returns 400', async () => {
 
 test('db.insertConversation failure returns 500 with client-safe error message (regression test)', async () => {
   const db = freshDb();
-  const { resendClient, twilioClient } = workingClients();
+  const { mailer, twilioClient } = workingClients();
 
   db.insertConversation = () => {
     throw new Error('simulated insertConversation outage');
   };
 
-  const app = createApp({ config, db, resendClient, twilioClient, fromEmail: 'leads@x.com', fromNumber: '+15125550199' });
+  const app = createApp({ config, db, mailer, twilioClient, fromEmail: 'leads@x.com', fromNumber: '+15125550199' });
   const server = app.listen(0);
   const { port } = server.address();
   try {
@@ -249,7 +249,7 @@ test('db.insertConversation failure returns 500 with client-safe error message (
 
 test('markLeadNotified failure after successful save returns 200 ok (regression test)', async () => {
   const db = freshDb();
-  const { resendClient, twilioClient } = workingClients();
+  const { mailer, twilioClient } = workingClients();
 
   // Spy on markLeadNotified to make it throw
   const originalMarkLeadNotified = db.markLeadNotified;
@@ -257,7 +257,7 @@ test('markLeadNotified failure after successful save returns 200 ok (regression 
     throw new Error('simulated markLeadNotified outage');
   };
 
-  const app = createApp({ config, db, resendClient, twilioClient, fromEmail: 'leads@x.com', fromNumber: '+15125550199' });
+  const app = createApp({ config, db, mailer, twilioClient, fromEmail: 'leads@x.com', fromNumber: '+15125550199' });
   const server = app.listen(0);
   const { port } = server.address();
   try {

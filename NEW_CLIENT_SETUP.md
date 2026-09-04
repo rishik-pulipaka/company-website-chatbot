@@ -37,8 +37,9 @@ folder and fill in the client's real info:
 Copy `.env.example` to `.env` and fill in:
 
 - `ANTHROPIC_API_KEY` — same key can be reused across all clients.
-- `RESEND_API_KEY`, `NOTIFY_FROM_EMAIL` — same Resend account can be
-  reused; `NOTIFY_FROM_EMAIL` should be a verified sending address/domain.
+- `GMAIL_USER`, `GMAIL_APP_PASSWORD` — same Gmail account (with an App
+  Password) can be reused for every client. Lead emails send from this
+  address.
 - `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER` — same
   Twilio account can be reused, or use a client-specific number if you
   want the SMS to come from a locally-recognizable number.

@@ -10,7 +10,7 @@ function createApp({
   config,
   db,
   anthropicClient,
-  resendClient,
+  mailer,
   twilioClient,
   model,
   fromEmail,
@@ -39,13 +39,13 @@ function createApp({
     app.use('/api/chat', createPublicApiLimiter(rateLimit));
     app.use('/api/lead', createPublicApiLimiter(rateLimit));
     app.use('/api', createChatRouter({ config, db, anthropicClient, model }));
-    app.use('/api', createLeadRouter({ config, db, resendClient, twilioClient, fromEmail, fromNumber }));
+    app.use('/api', createLeadRouter({ config, db, mailer, twilioClient, fromEmail, fromNumber }));
   }
 
   app.locals.config = config;
   app.locals.db = db;
   app.locals.anthropicClient = anthropicClient;
-  app.locals.resendClient = resendClient;
+  app.locals.mailer = mailer;
   app.locals.twilioClient = twilioClient;
 
   return app;
@@ -56,7 +56,7 @@ module.exports = { createApp };
 if (require.main === module) {
   require('dotenv').config();
   const { Anthropic } = require('@anthropic-ai/sdk');
-  const { Resend } = require('resend');
+  const nodemailer = require('nodemailer');
   const twilio = require('twilio');
   const { loadConfig } = require('./config-loader.js');
   const { createDb } = require('./db.js');
@@ -65,7 +65,13 @@ if (require.main === module) {
   const db = createDb(process.env.DATA_DB_PATH || path.join(__dirname, '..', 'data', 'leads.sqlite'));
   const anthropicClient = process.env.ANTHROPIC_API_KEY ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY }) : null;
   const model = process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5-20251001';
-  const resendClient = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+  const mailer =
+    process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD
+      ? nodemailer.createTransport({
+          service: 'gmail',
+          auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD }
+        })
+      : null;
   const twilioClient =
     process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN
       ? twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
@@ -77,9 +83,9 @@ if (require.main === module) {
     db,
     anthropicClient,
     model,
-    resendClient,
+    mailer,
     twilioClient,
-    fromEmail: process.env.NOTIFY_FROM_EMAIL,
+    fromEmail: process.env.NOTIFY_FROM_EMAIL || process.env.GMAIL_USER,
     fromNumber: process.env.TWILIO_FROM_NUMBER,
     rateLimit: {
       windowMs: process.env.RATE_LIMIT_WINDOW_MS ? Number(process.env.RATE_LIMIT_WINDOW_MS) : undefined,
@@ -91,7 +97,7 @@ if (require.main === module) {
   });
 
   const { scheduleMonthlyRecap } = require('./jobs/monthly-recap.js');
-  if (resendClient) {
-    scheduleMonthlyRecap({ db, config, resendClient, fromEmail: process.env.NOTIFY_FROM_EMAIL });
+  if (mailer) {
+    scheduleMonthlyRecap({ db, config, mailer, fromEmail: process.env.NOTIFY_FROM_EMAIL });
   }
 }
