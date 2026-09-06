@@ -179,6 +179,11 @@
   color: #6b7280;
 }
 
+.hvac-consent a {
+  color: #6b7280;
+  text-decoration: underline;
+}
+
 .hvac-input-row button,
 .hvac-lead-form button {
   background: var(--hvac-accent);
